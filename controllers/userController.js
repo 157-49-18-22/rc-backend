@@ -28,15 +28,20 @@ exports.getUserRole = async (req, res) => {
 };
 // Register User
 exports.register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const {email, mobileNo, firstname, lastname, password } = req.body;
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    const existingMobile = await User.findOne({ mobileNo });
+    if (existingMobile) {
+      return res.status(400).json({ message: 'User already exists with this mobile number' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, username, password: hashedPassword });
+    const newUser = new User({ email, mobileNo, firstname, lastname, password: hashedPassword });
 
     await newUser.save();
     let balance = await Balance.findOne({ userId: newUser._id });
@@ -56,9 +61,9 @@ exports.register = async (req, res) => {
 
 // Login User
 exports.login = async (req, res) => {
-  const { username, password } = req.body;
+  const {mobileNo, password } = req.body;
   try {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ mobileNo });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -157,12 +162,13 @@ exports.searchUsers = async (req, res) => {
     const users = await User.find({
       $or: [
         { email: { $regex: query, $options: 'i' } },
-        { username: { $regex: query, $options: 'i' } }
+        { firstname: { $regex: query, $options: 'i' } },  // Allow searching by mobileNo
+        { mobileNo: { $regex: query, $options: 'i' } }  // Allow searching by mobileNo
       ]
     })
       .skip((page - 1) * limit)  // Pagination: skip previous pages
       .limit(parseInt(limit))    // Limit results per page
-      .select('username email')  // Only select username and email fields from the User model
+      .select('firstname lastname mobileNo email ')  // Only select username and email fields from the User model
 
     if (users.length === 0) {
       return res.status(404).json({ message: 'No users found' });
@@ -172,7 +178,8 @@ exports.searchUsers = async (req, res) => {
     const totalUsers = await User.countDocuments({
       $or: [
         { email: { $regex: query, $options: 'i' } },
-        { username: { $regex: query, $options: 'i' } }
+        { firstname: { $regex: query, $options: 'i' } },
+        { mobileNo: { $regex: query, $options: 'i' } }
       ]
     });
 
