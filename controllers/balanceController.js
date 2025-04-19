@@ -43,6 +43,38 @@ exports.allocateBalance = async (req, res) => {
   }
 };
 
+// In your backend controller
+
+exports.addBalance = async (req, res) => {
+  const { userId, amount } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    let balance = await Balance.findOne({ userId });
+    if (!balance) {
+      balance = new Balance({ userId, balance: 0 });
+    }
+
+    const amountToAdd = Number(amount);
+    if (isNaN(amountToAdd)) {
+      return res.status(400).json({ message: 'Invalid amount' });
+    }
+
+    // Add the amount to the existing balance
+    balance.balance += amountToAdd;
+    await balance.save();
+
+    res.json({ message: 'Balance added successfully', balance: balance.balance });
+  } catch (err) {
+    console.error("Error in adding balance:", err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // User Deduct Balance (for purchase)
 exports.deductBalance = async (req, res) => {
   const { userId, amount } = req.body;
