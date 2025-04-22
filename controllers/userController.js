@@ -200,3 +200,26 @@ exports.searchUsers = async (req, res) => {
     res.status(500).json({ message: 'Error fetching users', error: error.message });
   }
 };
+exports.deleteUser = async (req, res) => {
+  const userId = req.params.id; // Get user ID from URL params
+
+  try {
+    // Find the user to delete
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Optionally, delete user's balance from the Balance collection
+    // await Balance.findOneAndDelete({ userId: user._id });
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
