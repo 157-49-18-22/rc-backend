@@ -1,50 +1,132 @@
 const Balance = require('../models/balance');
 const User = require('../models/user');
+exports.deductBalance = async (req, res) => {
+  try {
+    const user = req.user; // Get user from authMiddleware
+    const { amount, service = "vehicle_search" } = req.body; // userId not needed from body
+    
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'User not authenticated' 
+      });
+    }
+
+    const balance = await Balance.findOne({ userId: user._id });
+    if (!balance) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Balance not found' 
+      });
+    }
+
+    // If amount is not provided, use default based on service
+    let deductionAmount = amount;
+    if (!deductionAmount && service.includes("rc")) {
+      deductionAmount = 5; // Default RC cost
+    } else if (!deductionAmount && service.includes("chassis")) {
+      deductionAmount = 10; // Default chassis cost
+    }
+
+    if (balance.balance < deductionAmount) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Insufficient balance' 
+      });
+    }
+
+    balance.balance -= deductionAmount;
+    await balance.save();
+    
+    // Log the transaction
+    console.log(`Deducted ₹${deductionAmount} from user ${user._id} for ${service}`);
+    
+    res.json({ 
+      success: true,
+      message: 'Purchase successful', 
+      remainingBalance: balance.balance,
+      amountDeducted: deductionAmount,
+      service: service
+    });
+  } catch (err) {
+    console.error('Deduct balance error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
+  }
+};
+
+// Get User Balance - UPDATED
+exports.getBalance = async (req, res) => {
+  try {
+    const user = req.user; // Get user from authMiddleware
+    
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'User not authenticated' 
+      });
+    }
+
+    let balance = await Balance.findOne({ userId: user._id });
+
+    if (!balance) {
+      balance = new Balance({
+        userId: user._id,
+        balance: 0,
+      });
+      await balance.save();
+    }
+
+    res.json({ 
+      success: true,
+      balance: balance.balance,
+      rcCost: 5,
+      chassisCost: 10
+    });
+  } catch (err) {
+    console.error('Get balance error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
+  }
+};
 
 // Admin Allocate Balance
 exports.allocateBalance = async (req, res) => {
   const { userId, amount } = req.body;
 
-  // Debugging logs
-  console.log("Received userId:", userId);
-  console.log("Received amount:", amount);
-
   try {
-    // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
-      console.error("User not found with userId:", userId);  // Log if user is not found
       return res.status(400).json({ message: 'User not found' });
     }
 
-    // Check if balance exists for the user
     let balance = await Balance.findOne({ userId });
     if (!balance) {
-      console.log("No balance found, creating a new one for userId:", userId);  // Log if no balance found
       balance = new Balance({ userId, balance: 0 });
     }
 
-    // Allocate balance
     const amountToAllocate = Number(amount);
     if (isNaN(amountToAllocate)) {
-      console.error("Invalid amount:", amount);  // Log if the amount is invalid
       return res.status(400).json({ message: 'Invalid amount' });
     }
 
-    balance.balance = amountToAllocate;  // Update the balance
-    await balance.save();  // Save the balance
+    balance.balance = amountToAllocate;
+    await balance.save();
 
-    console.log("Updated balance:", balance.balance);  // Log the updated balance
-    res.json({ message: 'Balance allocated successfully', balance: balance.balance });
-
+    res.json({ 
+      message: 'Balance allocated successfully', 
+      balance: balance.balance 
+    });
   } catch (err) {
-    console.error("Error in allocating balance:", err);  // Log the error if something goes wrong
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// In your backend controller
-
+// Add Balance
 exports.addBalance = async (req, res) => {
   const { userId, amount } = req.body;
 
@@ -64,57 +146,15 @@ exports.addBalance = async (req, res) => {
       return res.status(400).json({ message: 'Invalid amount' });
     }
 
-    // Add the amount to the existing balance
     balance.balance += amountToAdd;
     await balance.save();
 
-    res.json({ message: 'Balance added successfully', balance: balance.balance });
-  } catch (err) {
-    console.error("Error in adding balance:", err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// User Deduct Balance (for purchase)
-exports.deductBalance = async (req, res) => {
-  const { userId, amount } = req.body;
-  try {
-    const balance = await Balance.findOne({ userId });
-    if (!balance) {
-      return res.status(400).json({ message: 'Balance not found' });
-    }
-
-    if (balance.balance < amount) {
-      return res.status(400).json({ message: 'Insufficient balance' });
-    }
-
-    balance.balance -= amount;
-    await balance.save();
-    res.json({ message: 'Purchase successful', remainingBalance: balance.balance });
+    res.json({ 
+      message: 'Balance added successfully', 
+      balance: balance.balance 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
-// Get User Balance
-exports.getBalance = async (req, res) => {
-  try {
-    // Find the balance of the logged-in user
-    let balance = await Balance.findOne({ userId: req.userId });
 
-    // If no balance is found, create a balance with 0
-    if (!balance) {
-      balance = new Balance({
-        userId: req.userId,
-        balance: 0,  // Default balance is 0 if not found
-      });
-
-      await balance.save();  // Save the new balance document
-    }
-
-    // Return the balance (either found or newly created)
-    res.json({ balance: balance.balance });
-  } catch (err) {
-    console.error('Error in getBalance:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
