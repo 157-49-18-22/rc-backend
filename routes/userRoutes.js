@@ -4,14 +4,19 @@ const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 
 const router = express.Router();
-router.delete('/:id',  authMiddleware, adminMiddleware, userController.deleteUser);
-router.get('/role', authMiddleware, userController.getUserRole);
+
+// ✅ SPECIFIC ROUTES FIRST (before /:id)
 router.post('/register', userController.register);
 router.post('/login', userController.login);
-router.get("/search", userController.searchUsers);
-// routes/user.routes.js
+router.get('/search', userController.searchUsers);
+router.get('/role', authMiddleware, userController.getUserRole);
 router.post('/admin/change-password', authMiddleware, adminMiddleware, userController.adminChangePassword);
+
+// ✅ PARAMETERIZED ROUTES LAST
+router.delete('/:id', authMiddleware, adminMiddleware, userController.deleteUser);
+
+// Commented routes
 // router.post('/forgot-password', userController.forgotPassword);
-// // Route for Reset Password: Updates the password if the token is valid
 // router.post('/reset-password', userController.resetPassword);
+
 module.exports = router;
