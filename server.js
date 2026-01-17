@@ -12,45 +12,29 @@ dotenv.config();
 connectDB();
 const app = express();
 
-// ============ CORS CONFIGURATION (UPDATED) ============
-const allowedOrigins = [
-  "https://www.rc-generator.in",
-  "https://rc-generator.in",
-  "http://localhost:5173",
-  "http://localhost:3000"
-];
+// CORS Configuration - FIXED
+const corsOptions = {
+  origin: [
+    'https://www.rc-generator.in',
+    'https://rc-generator.in',
+    'http://localhost:3000', // For local development
+    'http://localhost:5173'  // For Vite local development
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
+};
 
-// CORS middleware - MUST come before other middleware
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
-      if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("CORS blocked origin:", origin); // Debug log
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    exposedHeaders: ["Content-Length", "X-Request-Id"],
-    maxAge: 86400, // 24 hours
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-  })
-);
+// Apply CORS before other middleware
+app.use(cors(corsOptions));
 
-// Handle OPTIONS requests explicitly
-app.options("*", cors());
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
 
-// Body parser - MUST come after CORS
+// Middleware setup
 app.use(express.json());
 
-// ============ REST OF YOUR CODE ============
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const BASE64_AUTH = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
