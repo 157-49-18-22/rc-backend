@@ -5,7 +5,7 @@ const adminMiddleware = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 router.delete('/:id',  authMiddleware, adminMiddleware, userController.deleteUser);
-router.get('/role', userController.getUserRole);
+router.get('/role', authMiddleware, userController.getUserRole);
 router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.get("/search", userController.searchUsers);

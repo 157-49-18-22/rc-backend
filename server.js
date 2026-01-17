@@ -13,7 +13,32 @@ connectDB();
 const app = express();
 
 // Middleware setup
-app.use(cors());
+const allowedOrigins = [
+  "https://www.rc-generator.in",
+  "https://rc-generator.in",
+  "http://localhost:5173",
+  "http://localhost:3000"
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// ✅ VERY IMPORTANT
+app.options("*", cors());
+
 app.use(express.json());
 
 const CLIENT_ID = process.env.CLIENT_ID;
