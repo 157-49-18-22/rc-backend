@@ -56,6 +56,7 @@ const normalizeApiResponse = (apiResult) => {
       serial: apiResult.owner_count,
     },
     vehicle_data: {
+      regn_no: apiResult.reg_no,
       manufactured_date: apiResult.vehicle_manufacturing_month_year,
       category_description: apiResult.class,
       chassis_number: apiResult.chassis,
