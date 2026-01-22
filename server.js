@@ -99,7 +99,7 @@ app.post("/api/vehicle/rc", async (req, res) => {
 
     console.log("RC lookup request:", requestBody);
 
-    const response = await fetch("https://svc.digitap.ai/validation/kyc/v1/rc_plus", {
+    const response = await fetch("https://svc.digitap.ai/validation/kyc/v1/rc", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -278,7 +278,7 @@ app.post("/api/vehicle/search", async (req, res) => {
     // Step 2: Get vehicle details using RC number
     console.log(`Step 2: Fetching details for RC: ${rcNumber}`);
     
-    const rcResponse = await fetch("https://svc.digitap.ai/validation/kyc/v1/rc_plus", {
+    const rcResponse = await fetch("https://svc.digitap.ai/validation/kyc/v1/rc", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
