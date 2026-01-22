@@ -93,7 +93,7 @@ app.post("/api/vehicle/rc", async (req, res) => {
     }
 
     const requestBody = {
-      client_ref_num: `req_${Date.now()}`,
+      client_ref_num: `req_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
       reg_no: rcNumber.toUpperCase(),
     };
 
@@ -161,7 +161,7 @@ app.post("/api/vehicle/chassis-to-rc", async (req, res) => {
     }
 
     const requestBody = {
-      client_ref_num: `req_${Date.now()}`,
+      client_ref_num: `req_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
       chassis_no: chassisNumber.toUpperCase(),
     };
 
@@ -244,7 +244,7 @@ app.post("/api/vehicle/search", async (req, res) => {
           "Authorization": `Basic ${BASE64_AUTH}`,
         },
         body: JSON.stringify({
-          client_ref_num: `req_${Date.now()}_chassis`,
+          client_ref_num: `req_${Date.now()}_${Math.floor(Math.random() * 100000)}_chassis`,
           chassis_no: searchValue.toUpperCase(),
         }),
       });
@@ -285,7 +285,7 @@ app.post("/api/vehicle/search", async (req, res) => {
         "Authorization": `Basic ${BASE64_AUTH}`,
       },
       body: JSON.stringify({
-        client_ref_num: `req_${Date.now()}_rc`,
+        client_ref_num: `req_${Date.now()}_${Math.floor(Math.random() * 100000)}_rc`,
         reg_no: rcNumber.toUpperCase(),
       }),
     });
